@@ -1,3 +1,4 @@
+
 package com.management.smartcampusapi.resources;
 
 import javax.ws.rs.GET;
