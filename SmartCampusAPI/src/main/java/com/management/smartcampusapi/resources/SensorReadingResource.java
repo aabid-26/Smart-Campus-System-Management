@@ -1,7 +1,7 @@
 package com.management.smartcampusapi.resources;
 
 import com.management.smartcampusapi.data.DataStore;
-import com.management.smartcampusapi.exception.SensorUnavailableException;
+import com.management.smartcampusapi.exceptions.SensorUnavailableException;
 import com.management.smartcampusapi.model.Sensor;
 import com.management.smartcampusapi.model.SensorReading;
 

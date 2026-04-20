@@ -1,6 +1,6 @@
 package com.management.smartcampusapi.resources;
 import com.management.smartcampusapi.data.DataStore;
-import com.management.smartcampusapi.exception.RoomNotEmptyException;
+import com.management.smartcampusapi.exceptions.RoomNotEmptyException;
 import com.management.smartcampusapi.model.Room;
 
 

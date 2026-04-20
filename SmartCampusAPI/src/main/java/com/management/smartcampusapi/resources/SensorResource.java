@@ -1,7 +1,7 @@
 package com.management.smartcampusapi.resources;
 
 import com.management.smartcampusapi.data.DataStore;
-import com.management.smartcampusapi.exception.LinkedResourceNotFoundException;
+import com.management.smartcampusapi.exceptions.LinkedResourceNotFoundException;
 import com.management.smartcampusapi.model.Sensor;
 
 import javax.ws.rs.*;

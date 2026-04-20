@@ -1,4 +1,4 @@
-package com.management.smartcampusapi.exception;
+package com.management.smartcampusapi.exceptions;
 
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerRequestFilter;

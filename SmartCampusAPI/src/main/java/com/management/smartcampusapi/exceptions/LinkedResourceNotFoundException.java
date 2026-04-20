@@ -1,4 +1,4 @@
-package com.management.smartcampusapi.exception;
+package com.management.smartcampusapi.exceptions;
 
 public class LinkedResourceNotFoundException extends RuntimeException {
 

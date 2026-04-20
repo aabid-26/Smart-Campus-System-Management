@@ -1,4 +1,4 @@
-package com.management.smartcampusapi.exception;
+package com.management.smartcampusapi.exceptions;
 
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
