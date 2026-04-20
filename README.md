@@ -33,6 +33,6 @@
 
 ## 🛠️ Technology Stack
 * **Language:** Java
-* [cite_start]**Framework:** JAX-RS (Jakarta RESTful Web Services) [cite: 35]
-* [cite_start]**Build Tool:** Maven [cite: 103]
-* [cite_start]**Data Storage:** Thread-Safe In-Memory Data Structures (`ConcurrentHashMap`, `CopyOnWriteArrayList`) [cite: 207]
+* **Framework:** JAX-RS (Jakarta RESTful Web Services) 
+* **Build Tool:** Maven 
+* **Data Storage:** Thread-Safe In-Memory Data Structures (`ConcurrentHashMap`, `CopyOnWriteArrayList`) 
