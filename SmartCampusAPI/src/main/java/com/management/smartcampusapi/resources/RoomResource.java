@@ -1,13 +1,13 @@
 package com.management.smartcampusapi.resources;
+
 import com.management.smartcampusapi.data.DataStore;
 import com.management.smartcampusapi.exceptions.RoomNotEmptyException;
 import com.management.smartcampusapi.model.Room;
 
-
 import javax.ws.rs.*;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import javax.ws.rs.core.Context;
 import javax.ws.rs.core.UriInfo;
 import java.net.URI;
 import java.util.ArrayList;
@@ -30,41 +30,27 @@ public class RoomResource {
     // POST /api/v1/rooms
     @POST
     public Response createRoom(Room room, @Context UriInfo uriInfo) {
+        
+        // 1. Validation (Simplified to one line each using our helper method!)
         if (room == null || room.getId() == null || room.getId().trim().isEmpty()) {
-            Map<String, Object> error = new HashMap<>();
-            error.put("status", 400);
-            error.put("error", "Bad Request");
-            error.put("message", "Room 'id' is required.");
-            return Response.status(Response.Status.BAD_REQUEST).entity(error).build();
+            return buildError(Response.Status.BAD_REQUEST, "Room 'id' is required.");
         }
-
         if (room.getName() == null || room.getName().trim().isEmpty()) {
-            Map<String, Object> error = new HashMap<>();
-            error.put("status", 400);
-            error.put("error", "Bad Request");
-            error.put("message", "Room 'name' is required.");
-            return Response.status(Response.Status.BAD_REQUEST).entity(error).build();
+            return buildError(Response.Status.BAD_REQUEST, "Room 'name' is required.");
         }
-
         if (DataStore.rooms.containsKey(room.getId())) {
-            Map<String, Object> error = new HashMap<>();
-            error.put("status", 409);
-            error.put("error", "Conflict");
-            error.put("message", "A room with id '" + room.getId() + "' already exists.");
-            return Response.status(Response.Status.CONFLICT).entity(error).build();
+            return buildError(Response.Status.CONFLICT, "A room with id '" + room.getId() + "' already exists.");
         }
 
+        // 2. Setup and Save
         if (room.getSensorIds() == null) {
             room.setSensorIds(new ArrayList<>());
         }
-
         DataStore.rooms.put(room.getId(), room);
 
-        // Build the Location header URI pointing to the new room
-        URI location = uriInfo.getAbsolutePathBuilder()
-                .path(room.getId())
-                .build();
-
+        // 3. Build Response
+        URI location = uriInfo.getAbsolutePathBuilder().path(room.getId()).build();
+        
         Map<String, Object> response = new HashMap<>();
         response.put("message", "Room created successfully.");
         response.put("room", room);
@@ -79,11 +65,7 @@ public class RoomResource {
         Room room = DataStore.rooms.get(roomId);
 
         if (room == null) {
-            Map<String, Object> error = new HashMap<>();
-            error.put("status", 404);
-            error.put("error", "Not Found");
-            error.put("message", "Room '" + roomId + "' does not exist.");
-            return Response.status(Response.Status.NOT_FOUND).entity(error).build();
+            return buildError(Response.Status.NOT_FOUND, "Room '" + roomId + "' does not exist.");
         }
 
         return Response.ok(room).build();
@@ -96,13 +78,10 @@ public class RoomResource {
         Room room = DataStore.rooms.get(roomId);
 
         if (room == null) {
-            Map<String, Object> error = new HashMap<>();
-            error.put("status", 404);
-            error.put("error", "Not Found");
-            error.put("message", "Room '" + roomId + "' does not exist or has already been deleted.");
-            return Response.status(Response.Status.NOT_FOUND).entity(error).build();
+            return buildError(Response.Status.NOT_FOUND, "Room '" + roomId + "' does not exist or has already been deleted.");
         }
 
+        // Coursework Part 2: Safety logic constraint
         if (!room.getSensorIds().isEmpty()) {
             throw new RoomNotEmptyException(roomId);
         }
@@ -114,5 +93,17 @@ public class RoomResource {
         response.put("deletedRoomId", roomId);
 
         return Response.ok(response).build();
+    }
+
+    // ------------------------------------------------------------------
+    // HELPER METHOD: This handles building the error JSON automatically!
+    // ------------------------------------------------------------------
+    private Response buildError(Response.Status status, String message) {
+        Map<String, Object> error = new HashMap<>();
+        error.put("status", status.getStatusCode());
+        error.put("error", status.getReasonPhrase()); // Automatically gets "Bad Request", "Not Found", etc.
+        error.put("message", message);
+        
+        return Response.status(status).entity(error).build();
     }
 }
