@@ -20,12 +20,12 @@ import java.util.stream.Collectors;
 public class SensorResource {
 
     // GET /api/v1/sensors?type=CO2
-    @GET
+    @GET //returns all the sesnors in the campus
     public Response getAllSensors(@QueryParam("type") String type) {
         List<Sensor> result = new ArrayList<>(DataStore.sensors.values());
 
         if (type != null && !type.trim().isEmpty()) {
-            result = result.stream()
+            result = result.stream() // this is to quickly sift through the list and return only the sensors that matched the reqeusted type
                     .filter(s -> s.getType().equalsIgnoreCase(type))
                     .collect(Collectors.toList());
         }
@@ -34,9 +34,9 @@ public class SensorResource {
     }
 
     // POST /api/v1/sensors
-    @POST
+    @POST 
     public Response createSensor(Sensor sensor) {
-        // 1. Validation (Simplified with helper method!)
+        // Basic validation is conducted to check details the user provided so the database does not get currputed
         if (sensor == null || sensor.getId() == null || sensor.getId().trim().isEmpty()) {
             return buildError(Response.Status.BAD_REQUEST, "Sensor 'id' is required.");
         }
@@ -47,7 +47,7 @@ public class SensorResource {
             return buildError(Response.Status.BAD_REQUEST, "Sensor 'roomId' is required.");
         }
 
-        // Check the referenced room actually exists (Part 3 Validation)
+        
         if (!DataStore.rooms.containsKey(sensor.getRoomId())) {
             throw new LinkedResourceNotFoundException("roomId", sensor.getRoomId());
         }
@@ -56,7 +56,7 @@ public class SensorResource {
             return buildError(Response.Status.CONFLICT, "A sensor with id '" + sensor.getId() + "' already exists.");
         }
 
-        // 2. Setup and Save
+        // Setup and Save
         if (sensor.getStatus() == null || sensor.getStatus().trim().isEmpty()) {
             sensor.setStatus("ACTIVE");
         }
@@ -64,10 +64,9 @@ public class SensorResource {
         DataStore.sensors.put(sensor.getId(), sensor);
         DataStore.rooms.get(sensor.getRoomId()).getSensorIds().add(sensor.getId());
 
-        // CRITICAL FIX: Upgraded to thread-safe CopyOnWriteArrayList
         DataStore.sensorReadings.put(sensor.getId(), new CopyOnWriteArrayList<>());
 
-        // 3. Build Response
+        // Build Response
         Map<String, Object> response = new HashMap<>();
         response.put("message", "Sensor created successfully.");
         response.put("sensor", sensor);
@@ -115,9 +114,8 @@ public class SensorResource {
         return Response.ok(response).build();
     }
 
-    // -------------------------------------------------------------------------
     // Part 4 - Sub-Resource Locator (The "Traffic Cop")
-    // -------------------------------------------------------------------------
+    // It intercepts any URl that goes deeper than the sensor 
     @Path("/{sensorId}/readings")
     public SensorReadingResource getReadingResource(@PathParam("sensorId") String sensorId) {
         return new SensorReadingResource(sensorId);
