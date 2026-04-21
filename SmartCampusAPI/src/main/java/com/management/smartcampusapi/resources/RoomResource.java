@@ -81,7 +81,7 @@ public class RoomResource {
             return buildError(Response.Status.NOT_FOUND, "Room '" + roomId + "' does not exist or has already been deleted.");
         }
 
-        // Coursework Part 2: Safety logic constraint
+        // Safety logic constraint
         if (!room.getSensorIds().isEmpty()) {
             throw new RoomNotEmptyException(roomId);
         }
@@ -95,9 +95,7 @@ public class RoomResource {
         return Response.ok(response).build();
     }
 
-    // ------------------------------------------------------------------
-    // HELPER METHOD: This handles building the error JSON automatically!
-    // ------------------------------------------------------------------
+    // HELPER METHOD: This handles building the error JSON automatically
     private Response buildError(Response.Status status, String message) {
         Map<String, Object> error = new HashMap<>();
         error.put("status", status.getStatusCode());

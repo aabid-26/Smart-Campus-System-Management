@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CopyOnWriteArrayList; // Upgraded for Thread Safety
 import java.util.stream.Collectors;
 
 @Path("/sensors")
@@ -18,8 +19,7 @@ import java.util.stream.Collectors;
 @Consumes(MediaType.APPLICATION_JSON)
 public class SensorResource {
 
-    // GET /api/v1/sensors
-    // Optional query param: ?type=CO2
+    // GET /api/v1/sensors?type=CO2
     @GET
     public Response getAllSensors(@QueryParam("type") String type) {
         List<Sensor> result = new ArrayList<>(DataStore.sensors.values());
@@ -34,60 +34,40 @@ public class SensorResource {
     }
 
     // POST /api/v1/sensors
-    // Validates that the roomId in the request body actually exists
     @POST
     public Response createSensor(Sensor sensor) {
+        // 1. Validation (Simplified with helper method!)
         if (sensor == null || sensor.getId() == null || sensor.getId().trim().isEmpty()) {
-            Map<String, Object> error = new HashMap<>();
-            error.put("status", 400);
-            error.put("error", "Bad Request");
-            error.put("message", "Sensor 'id' is required.");
-            return Response.status(Response.Status.BAD_REQUEST).entity(error).build();
+            return buildError(Response.Status.BAD_REQUEST, "Sensor 'id' is required.");
         }
-
         if (sensor.getType() == null || sensor.getType().trim().isEmpty()) {
-            Map<String, Object> error = new HashMap<>();
-            error.put("status", 400);
-            error.put("error", "Bad Request");
-            error.put("message", "Sensor 'type' is required.");
-            return Response.status(Response.Status.BAD_REQUEST).entity(error).build();
+            return buildError(Response.Status.BAD_REQUEST, "Sensor 'type' is required.");
         }
-
         if (sensor.getRoomId() == null || sensor.getRoomId().trim().isEmpty()) {
-            Map<String, Object> error = new HashMap<>();
-            error.put("status", 400);
-            error.put("error", "Bad Request");
-            error.put("message", "Sensor 'roomId' is required.");
-            return Response.status(Response.Status.BAD_REQUEST).entity(error).build();
+            return buildError(Response.Status.BAD_REQUEST, "Sensor 'roomId' is required.");
         }
 
-        // Check the referenced room actually exists
+        // Check the referenced room actually exists (Part 3 Validation)
         if (!DataStore.rooms.containsKey(sensor.getRoomId())) {
             throw new LinkedResourceNotFoundException("roomId", sensor.getRoomId());
         }
 
         if (DataStore.sensors.containsKey(sensor.getId())) {
-            Map<String, Object> error = new HashMap<>();
-            error.put("status", 409);
-            error.put("error", "Conflict");
-            error.put("message", "A sensor with id '" + sensor.getId() + "' already exists.");
-            return Response.status(Response.Status.CONFLICT).entity(error).build();
+            return buildError(Response.Status.CONFLICT, "A sensor with id '" + sensor.getId() + "' already exists.");
         }
 
-        // Default status to ACTIVE if not provided
+        // 2. Setup and Save
         if (sensor.getStatus() == null || sensor.getStatus().trim().isEmpty()) {
             sensor.setStatus("ACTIVE");
         }
 
-        // Save the sensor
         DataStore.sensors.put(sensor.getId(), sensor);
-
-        // Link sensor to the room
         DataStore.rooms.get(sensor.getRoomId()).getSensorIds().add(sensor.getId());
 
-        // Initialise an empty readings list for this sensor
-        DataStore.sensorReadings.put(sensor.getId(), new ArrayList<>());
+        // CRITICAL FIX: Upgraded to thread-safe CopyOnWriteArrayList
+        DataStore.sensorReadings.put(sensor.getId(), new CopyOnWriteArrayList<>());
 
+        // 3. Build Response
         Map<String, Object> response = new HashMap<>();
         response.put("message", "Sensor created successfully.");
         response.put("sensor", sensor);
@@ -102,11 +82,7 @@ public class SensorResource {
         Sensor sensor = DataStore.sensors.get(sensorId);
 
         if (sensor == null) {
-            Map<String, Object> error = new HashMap<>();
-            error.put("status", 404);
-            error.put("error", "Not Found");
-            error.put("message", "Sensor '" + sensorId + "' does not exist.");
-            return Response.status(Response.Status.NOT_FOUND).entity(error).build();
+            return buildError(Response.Status.NOT_FOUND, "Sensor '" + sensorId + "' does not exist.");
         }
 
         return Response.ok(sensor).build();
@@ -119,11 +95,7 @@ public class SensorResource {
         Sensor sensor = DataStore.sensors.get(sensorId);
 
         if (sensor == null) {
-            Map<String, Object> error = new HashMap<>();
-            error.put("status", 404);
-            error.put("error", "Not Found");
-            error.put("message", "Sensor '" + sensorId + "' does not exist.");
-            return Response.status(Response.Status.NOT_FOUND).entity(error).build();
+            return buildError(Response.Status.NOT_FOUND, "Sensor '" + sensorId + "' does not exist.");
         }
 
         // Remove sensor from its room's sensorIds list
@@ -144,15 +116,20 @@ public class SensorResource {
     }
 
     // -------------------------------------------------------------------------
-    // Part 4 - Sub-Resource Locator
-    // GET/POST /api/v1/sensors/{sensorId}/readings
-    //
-    // Instead of defining reading paths here, we delegate to
-    // SensorReadingResource. Jersey will call this method to get the
-    // object that handles the /readings sub-path.
+    // Part 4 - Sub-Resource Locator (The "Traffic Cop")
     // -------------------------------------------------------------------------
     @Path("/{sensorId}/readings")
     public SensorReadingResource getReadingResource(@PathParam("sensorId") String sensorId) {
         return new SensorReadingResource(sensorId);
+    }
+
+    // HELPER METHOD: Builds JSON error responses automatically
+    private Response buildError(Response.Status status, String message) {
+        Map<String, Object> error = new HashMap<>();
+        error.put("status", status.getStatusCode());
+        error.put("error", status.getReasonPhrase());
+        error.put("message", message);
+        
+        return Response.status(status).entity(error).build();
     }
 }

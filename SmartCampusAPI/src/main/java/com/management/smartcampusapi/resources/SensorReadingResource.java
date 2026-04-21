@@ -8,11 +8,11 @@ import com.management.smartcampusapi.model.SensorReading;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.CopyOnWriteArrayList; // Upgraded for Thread Safety
 
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
@@ -25,35 +25,26 @@ public class SensorReadingResource {
     }
 
     // GET /api/v1/sensors/{sensorId}/readings
-    // Returns full reading history for the sensor
     @GET
     public Response getAllReadings() {
         Sensor sensor = DataStore.sensors.get(sensorId);
 
         if (sensor == null) {
-            Map<String, Object> error = new HashMap<>();
-            error.put("status", 404);
-            error.put("error", "Not Found");
-            error.put("message", "Sensor '" + sensorId + "' does not exist.");
-            return Response.status(Response.Status.NOT_FOUND).entity(error).build();
+            return buildError(Response.Status.NOT_FOUND, "Sensor '" + sensorId + "' does not exist.");
         }
 
-        List<SensorReading> readings = DataStore.sensorReadings.getOrDefault(sensorId, new ArrayList<>());
+        // Safe fallback using thread-safe list
+        List<SensorReading> readings = DataStore.sensorReadings.getOrDefault(sensorId, new CopyOnWriteArrayList<>());
         return Response.ok(readings).build();
     }
 
     // POST /api/v1/sensors/{sensorId}/readings
-    // Appends a new reading and updates the sensor's currentValue
     @POST
     public Response addReading(SensorReading reading) {
         Sensor sensor = DataStore.sensors.get(sensorId);
 
         if (sensor == null) {
-            Map<String, Object> error = new HashMap<>();
-            error.put("status", 404);
-            error.put("error", "Not Found");
-            error.put("message", "Sensor '" + sensorId + "' does not exist.");
-            return Response.status(Response.Status.NOT_FOUND).entity(error).build();
+            return buildError(Response.Status.NOT_FOUND, "Sensor '" + sensorId + "' does not exist.");
         }
 
         // Part 5 - State Constraint: sensor must be ACTIVE to accept readings
@@ -62,11 +53,7 @@ public class SensorReadingResource {
         }
 
         if (reading == null) {
-            Map<String, Object> error = new HashMap<>();
-            error.put("status", 400);
-            error.put("error", "Bad Request");
-            error.put("message", "Reading body is required.");
-            return Response.status(Response.Status.BAD_REQUEST).entity(error).build();
+            return buildError(Response.Status.BAD_REQUEST, "Reading body is required.");
         }
 
         // Auto-generate ID and timestamp if not provided
@@ -78,9 +65,9 @@ public class SensorReadingResource {
             reading.setTimestamp(System.currentTimeMillis());
         }
 
-        // Save the reading
+        // Save the reading safely (preventing ConcurrentModificationException)
         DataStore.sensorReadings
-                .computeIfAbsent(sensorId, k -> new ArrayList<>())
+                .computeIfAbsent(sensorId, k -> new CopyOnWriteArrayList<>())
                 .add(reading);
 
         // Side effect: update the parent sensor's currentValue
@@ -95,38 +82,37 @@ public class SensorReadingResource {
     }
 
     // GET /api/v1/sensors/{sensorId}/readings/{readingId}
-    // Fetch a single specific reading by its ID
     @GET
     @Path("/{readingId}")
     public Response getReadingById(@PathParam("readingId") String readingId) {
         Sensor sensor = DataStore.sensors.get(sensorId);
 
         if (sensor == null) {
-            Map<String, Object> error = new HashMap<>();
-            error.put("status", 404);
-            error.put("error", "Not Found");
-            error.put("message", "Sensor '" + sensorId + "' does not exist.");
-            return Response.status(Response.Status.NOT_FOUND).entity(error).build();
+            return buildError(Response.Status.NOT_FOUND, "Sensor '" + sensorId + "' does not exist.");
         }
 
-        List<SensorReading> readings = DataStore.sensorReadings.getOrDefault(sensorId, new ArrayList<>());
+        List<SensorReading> readings = DataStore.sensorReadings.getOrDefault(sensorId, new CopyOnWriteArrayList<>());
 
-        SensorReading found = null;
-        for (SensorReading r : readings) {
-            if (r.getId().equals(readingId)) {
-                found = r;
-                break;
-            }
-        }
+        // Stream simplification: Finds the specific reading in a single, clean line
+        SensorReading found = readings.stream()
+                .filter(r -> r.getId().equals(readingId))
+                .findFirst()
+                .orElse(null);
 
         if (found == null) {
-            Map<String, Object> error = new HashMap<>();
-            error.put("status", 404);
-            error.put("error", "Not Found");
-            error.put("message", "Reading '" + readingId + "' not found for sensor '" + sensorId + "'.");
-            return Response.status(Response.Status.NOT_FOUND).entity(error).build();
+            return buildError(Response.Status.NOT_FOUND, "Reading '" + readingId + "' not found for sensor '" + sensorId + "'.");
         }
 
         return Response.ok(found).build();
+    }
+
+    // HELPER METHOD: Builds JSON error responses automatically
+    private Response buildError(Response.Status status, String message) {
+        Map<String, Object> error = new HashMap<>();
+        error.put("status", status.getStatusCode());
+        error.put("error", status.getReasonPhrase());
+        error.put("message", message);
+        
+        return Response.status(status).entity(error).build();
     }
 }
