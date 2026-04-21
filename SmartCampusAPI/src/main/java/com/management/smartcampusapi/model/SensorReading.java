@@ -1,12 +1,19 @@
 package com.management.smartcampusapi.model;
 
+import java.util.UUID;
+
 public class SensorReading {
 
-    private String id;
+    private String id; // unique identifer for the event id
     private long timestamp;
     private double value;
 
-    public SensorReading() {}
+    // The framework calls this constructor when it receives JSON
+    public SensorReading() {
+        // The ID and Timestamp are automatically generated
+        this.id = UUID.randomUUID().toString();
+        this.timestamp = System.currentTimeMillis();
+    }
 
     public SensorReading(String id, long timestamp, double value) {
         this.id = id;
