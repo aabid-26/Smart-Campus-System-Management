@@ -21,7 +21,7 @@ public class DataStore {
         Room r1 = new Room("LIB-301", "Library Quiet Study", 50);
         Room r2 = new Room("LAB-101", "Computer Science Lab", 30);
         Room r3 = new Room("HALL-01", "Main Lecture Hall", 200);
-        
+       
         rooms.put(r1.getId(), r1);
         rooms.put(r2.getId(), r2);
         rooms.put(r3.getId(), r3);
@@ -31,7 +31,7 @@ public class DataStore {
         Sensor s2 = new Sensor("CO2-001", "CO2", "ACTIVE", 412.0, r2.getId());
         Sensor s3 = new Sensor("OCC-001", "Occupancy", "ACTIVE", 18.0, r3.getId());
         Sensor s4 = new Sensor("TEMP-002", "Temperature", "MAINTENANCE", 0.0, r2.getId());
-        
+       
         sensors.put(s1.getId(), s1);
         sensors.put(s2.getId(), s2);
         sensors.put(s3.getId(), s3);
