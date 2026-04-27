@@ -27,10 +27,10 @@ public class DataStore {
         rooms.put(r3.getId(), r3);
 
         // 2. Pre-load Sensors (Using the Room IDs directly from the objects) 
-        Sensor s1 = new Sensor("TEMP-001", "Temperature", "ACTIVE", 22.5, r1.getId());
-        Sensor s2 = new Sensor("CO2-001", "CO2", "ACTIVE", 412.0, r2.getId());
-        Sensor s3 = new Sensor("OCC-001", "Occupancy", "ACTIVE", 18.0, r3.getId());
-        Sensor s4 = new Sensor("TEMP-002", "Temperature", "MAINTENANCE", 0.0, r2.getId());
+        Sensor s1 = new Sensor("TEM001", "Temperature", "ACTIVE", 22.5, r1.getId());
+        Sensor s2 = new Sensor("CO2001", "CO2", "ACTIVE", 412.0, r2.getId());
+        Sensor s3 = new Sensor("OCC001", "Occupancy", "ACTIVE", 18.0, r3.getId());
+        Sensor s4 = new Sensor("TEM002", "Temperature", "MAINTENANCE", 0.0, r2.getId());
        
         sensors.put(s1.getId(), s1);
         sensors.put(s2.getId(), s2);
