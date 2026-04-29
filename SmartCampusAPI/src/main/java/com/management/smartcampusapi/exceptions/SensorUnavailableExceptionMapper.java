@@ -17,7 +17,7 @@ public class SensorUnavailableExceptionMapper
         error.put("status", 403);
         error.put("error", "Forbidden");
         error.put("message", ex.getMessage());
-        error.put("sensorId", ex.getSensorId());
+        error.put("sensorId", ex.getSensorID());
         error.put("currentStatus", ex.getStatus());
         error.put("hint", "Only sensors with status ACTIVE can record new readings.");
 
