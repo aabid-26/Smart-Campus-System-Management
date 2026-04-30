@@ -10,12 +10,12 @@
 ## ⚙️ Core Architecture & Features
 
 ### 1. Versioned API & Discovery (HATEOAS)
-* [cite_start]**Entry Point:** The application is strictly versioned under the `/api/v1` path to allow for future backward-compatible updates[cite: 104].
-* [cite_start]**Discovery Endpoint:** Features a root discovery endpoint (`GET /api/v1`) that provides API metadata, administrative contact details, and a map of primary resource collections, adhering to advanced RESTful design principles[cite: 109].
+* [cite_start]**Entry Point:** The application is strictly versioned under the `/api/v1` path to allow for future backward-compatible updates.
+* [cite_start]**Discovery Endpoint:** Features a root discovery endpoint (`GET /api/v1`) that provides API metadata, administrative contact details, and a map of primary resource collections, adhering to advanced RESTful design principles.
 
 ### 2. Room Management & Safety Logic
-* [cite_start]**Resource CRUD:** Full capabilities to retrieve, create, and fetch metadata for university rooms[cite: 115, 116, 117].
-* [cite_start]**Data Orphan Prevention:** Implements strict business logic to prevent the deletion of any room that still contains active sensors[cite: 122]. [cite_start]Attempting to do so triggers a controlled HTTP 409 Conflict response[cite: 153].
+**Resource CRUD:** Full capabilities to retrieve, create, and fetch metadata for university rooms.
+**Data Orphan Prevention:** Implements strict business logic to prevent the deletion of any room that still contains active sensors. Attempting to do so triggers a controlled HTTP 409 Conflict response.
 
 ### 3. Sensor Linking & Filtered Retrieval
 * [cite_start]**Relational Integrity:** When registering a new sensor, the API validates the dependency to ensure the assigned `roomId` actually exists in the system[cite: 129]. [cite_start]Failing this check returns a semantic HTTP 422 Unprocessable Entity[cite: 156].
