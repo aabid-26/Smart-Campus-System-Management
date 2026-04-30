@@ -35,4 +35,99 @@
 * **Language:** Java
 * **Framework:** JAX-RS (Jakarta RESTful Web Services) 
 * **Build Tool:** Maven 
-* **Data Storage:** Thread-Safe In-Memory Data Structures (`ConcurrentHashMap`, `CopyOnWriteArrayList`) 
+* **Data Storage:** Thread-Safe In-Memory Data Structures (`ConcurrentHashMap`, `CopyOnWriteArrayList`)
+
+## Project Structure
+src/main/java/com/management/smartcampusapi/
+├── SmartCampusApplication.java       - JAX-RS entry point (@ApplicationPath)
+├── data/
+│   └── DataStore.java                - Shared in-memory data store
+├── model/
+│   ├── Room.java
+│   ├── Sensor.java
+│   └── SensorReading.java
+├── resources/
+│   ├── DiscoveryResource.java        - GET /api/v1
+│   ├── RoomResource.java             - Room CRUD operations
+│   ├── SensorResource.java           - Sensor operations + sub-resource locator
+│   └── SensorReadingResource.java    - Sensor reading history
+├── exceptions/
+│   ├── RoomNotEmptyException.java
+│   ├── RoomNotEmptyExceptionMapper.java
+│   ├── LinkedResourceNotFoundException.java
+│   ├── LinkedResourceNotFoundExceptionMapper.java
+│   ├── SensorUnavailableException.java
+│   ├── SensorUnavailableExceptionMapper.java
+│   └── GlobalExceptionMapper.java
+└── filter/
+    └── LoggingFilter.java
+
+## How to Build and Run
+
+### Prerequisites
+- Java 8 or higher installed
+- Apache Maven installed
+- Apache Tomcat 9 installed
+
+### Steps
+
+1. Clone the repository:
+   git clone https://github.com/yourusername/SmartCampusAPI.git
+   cd SmartCampusAPI
+
+2. Build the project:
+   mvn clean install
+
+3. Run using the embedded Tomcat Maven plugin:
+   mvn tomcat7:run
+
+4. The API will be available at:
+   http://localhost:8080/SmartCampusAPI/api/v1
+
+### Alternatively — Deploy to Tomcat manually:
+1. Run: mvn clean package
+2. Copy the generated WAR file from /target/SmartCampusAPI-1.0-SNAPSHOT.war
+   into your Tomcat /webapps directory
+3. Start Tomcat: ./bin/startup.sh (Mac/Linux) or bin\startup.bat (Windows)
+4. Access at: http://localhost:8080/SmartCampusAPI/api/v1
+
+
+## Sample curl Commands
+
+### 1. Discovery Endpoint
+curl -X GET http://localhost:8080/SmartCampusAPI/api/v1
+
+### 2. Get all rooms
+curl -X GET http://localhost:8080/SmartCampusAPI/api/v1/rooms
+
+### 3. Create a new room
+curl -X POST http://localhost:8080/SmartCampusAPI/api/v1/rooms \
+  -H "Content-Type: application/json" \
+  -d '{"id":"ENG-101","name":"Engineering Lab","capacity":40}'
+
+### 4. Get a specific room
+curl -X GET http://localhost:8080/SmartCampusAPI/api/v1/rooms/ENG-101
+
+### 5. Try deleting a room that has sensors (expect 409)
+curl -X DELETE http://localhost:8080/SmartCampusAPI/api/v1/rooms/LIB-301
+
+### 6. Create a sensor with a valid roomId
+curl -X POST http://localhost:8080/SmartCampusAPI/api/v1/sensors \
+  -H "Content-Type: application/json" \
+  -d '{"id":"TEMP-003","type":"Temperature","status":"ACTIVE","currentValue":20.0,"roomId":"ENG-101"}'
+
+### 7. Get sensors filtered by type
+curl -X GET "http://localhost:8080/SmartCampusAPI/api/v1/sensors?type=Temperature"
+
+### 8. Post a reading for a sensor
+curl -X POST http://localhost:8080/SmartCampusAPI/api/v1/sensors/TEMP-001/readings \
+  -H "Content-Type: application/json" \
+  -d '{"value":24.5}'
+
+### 9. Get all readings for a sensor
+curl -X GET http://localhost:8080/SmartCampusAPI/api/v1/sensors/TEMP-001/readings
+
+### 10. Try posting a reading to a MAINTENANCE sensor (expect 403)
+curl -X POST http://localhost:8080/SmartCampusAPI/api/v1/sensors/TEMP-002/readings \
+  -H "Content-Type: application/json" \
+  -d '{"value":19.0}'
