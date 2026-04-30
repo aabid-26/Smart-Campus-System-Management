@@ -33,17 +33,21 @@ Built strictly using **Java and JAX-RS (Jakarta RESTful Web Services)**, the API
 ## Available Endpoints
 Base URL: http://localhost:8080/campus_api/api/v1
 
-Method	Endpoint	Description
-GET	/api/v1	API discovery and metadata
-GET	/api/v1/rooms	Get all rooms
-POST	/api/v1/rooms	Create a new room
-GET	/api/v1/rooms/{roomId}	Get a specific room by ID
-DELETE	/api/v1/rooms/{roomId}	Delete a room (only if no sensors)
-GET	/api/v1/sensors	Get all sensors (supports ?type= filter)
-POST	/api/v1/sensors	Register a new sensor
-GET	/api/v1/sensors/{sensorId}	Get a specific sensor by ID
-GET	/api/v1/sensors/{sensorId}/readings	Get all readings for a sensor
-POST	/api/v1/sensors/{sensorId}/readings	Add a new reading for a sensor
+## API Endpoints
+
+| Method |                Endpoint                |                  Description                 |
+|--------|----------------------------------------|----------------------------------------------|
+| GET    | `/api/v1`                              | API discovery and metadata                   |
+| GET    | `/api/v1/rooms`                        | Get all rooms                                |
+| POST   | `/api/v1/rooms`                        | Create a new room                            |
+| GET    | `/api/v1/rooms/{roomId}`               | Get a specific room by ID                    |
+| DELETE | `/api/v1/rooms/{roomId}`               | Delete a room (only if no sensors assigned)  |
+| GET    | `/api/v1/sensors`                      | Get all sensors (supports `?type=` filter)   |
+| POST   | `/api/v1/sensors`                      | Register a new sensor                        |
+| GET    | `/api/v1/sensors/{sensorId}`           | Get a specific sensor by ID                  |
+| DELETE | `/api/v1/sensors/{sensorId}`           | Delete a sensor                              |
+| GET    | `/api/v1/sensors/{sensorId}/readings`  | Get all readings for a sensor                |
+| POST   | `/api/v1/sensors/{sensorId}/readings`  | Add a new reading for a sensor               |
 
 
 ---
