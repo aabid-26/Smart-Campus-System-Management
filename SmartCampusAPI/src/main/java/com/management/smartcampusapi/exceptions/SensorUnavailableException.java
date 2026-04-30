@@ -5,9 +5,9 @@ public class SensorUnavailableException extends RuntimeException {
     private final String sensorID;
     private final String status;
 
-    public SensorUnavailableException(String sensorId, String status) {
-        super("Sensor '" + sensorId + "' cannot accept readings. Current status: " + status);
-        this.sensorID = sensorId;
+    public SensorUnavailableException(String sensorID, String status) {
+        super("Sensor '" + sensorID + "' cannot accept readings. Current status: " + status);
+        this.sensorID = sensorID;
         this.status = status;
     }
 
